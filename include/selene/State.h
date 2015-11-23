@@ -116,6 +116,10 @@ public:
         return Selector(_l, *_registry, *_exception_handler, name);
     }
 
+    bool operator()(const std::string &code) {
+        return operator()(code.c_str());
+    }
+
     bool operator()(const char *code) {
         ResetStackOnScopeExit savedStack(_l);
         int status = luaL_dostring(_l, code);
@@ -131,6 +135,10 @@ public:
 
     void InteractiveDebug() {
         luaL_dostring(_l, "debug.debug()");
+    }
+
+    lua_State* LuaState() {
+        return _l;
     }
 
     std::vector<std::string> GlobalNames() {
