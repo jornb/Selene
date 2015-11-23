@@ -108,6 +108,10 @@ public:
     }
 
 public:
+    Selector operator[](const std::string &name) {
+        return Selector(_l, *_registry, *_exception_handler, name.c_str());
+    }
+
     Selector operator[](const char *name) {
         return Selector(_l, *_registry, *_exception_handler, name);
     }
@@ -127,6 +131,32 @@ public:
 
     void InteractiveDebug() {
         luaL_dostring(_l, "debug.debug()");
+    }
+
+    std::vector<std::string> GlobalNames() {
+        std::vector<std::string> globals;
+
+        if (!_l) return globals;
+
+        lua_pushglobaltable(_l);                    // Get global table
+        lua_pushnil(_l);                            // put a nil key on stack
+        while (lua_next(_l, -2) != 0) {             // key(-1) is replaced by the next key(-1) in table(-2)
+
+            auto type = lua_type(_l, -2);
+            if (type == LUA_TSTRING) {  // check if key is a string
+                // you may use key.assign(lua_tostring(L,-2));
+                globals.push_back(std::string(lua_tostring(_l, -2)));
+            }
+            else if (type == LUA_TNUMBER) { //or if it is a number
+                char buf[64];
+                sprintf_s(buf, "%g", lua_tonumber(_l, -2));
+                globals.push_back(std::string(buf));
+            }
+            lua_pop(_l, 1);                     // remove value(-1), now key on top at(-1)
+        }
+        lua_pop(_l, 1);                         // remove global table(-1)
+
+        return globals;
     }
 
     friend std::ostream &operator<<(std::ostream &os, const State &state);

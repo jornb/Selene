@@ -143,7 +143,7 @@ private:
             arg.Push(_state);
         }
         auto const statusCode =
-            lua_pcall(_state, _functor_arguments.size(), num_ret, handler_index - 1);
+            lua_pcall(_state, (int)_functor_arguments.size(), num_ret, handler_index - 1);
 
         // remove error handler
         lua_remove(_state, handler_index - 1);
@@ -247,6 +247,12 @@ public:
         _evaluate_store([this, s]() {
             detail::_push(_state, s);
         });
+    }
+
+    int Type() const {
+        ResetStackOnScopeExit save(_state);
+        _evaluate_retrieve(1);
+        return lua_type(_state, -1);
     }
 
     template <typename T, typename... Funs>
